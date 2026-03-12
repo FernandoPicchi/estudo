@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM de Conteúdos — CoworkOS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-family: 'JetBrains Mono', 'Fira Mono', monospace;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #f5a623;
+      font-size: 1.5rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .session {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-left: 3px solid #f5a623;
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .session-date {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+    .session-title {
+      color: #f5a623;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .session-body {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: #ccc;
+      white-space: pre-wrap;
+    }
+    .tag {
+      display: inline-block;
+      background: #2a2a2a;
+      color: #f5a623;
+      font-size: 0.7rem;
+      padding: 0.2em 0.6em;
+      border-radius: 2px;
+      margin: 0.25rem 0.2rem 0 0;
+    }
+    .empty {
+      color: #555;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 3rem;
+    }
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .stats span { color: #f5a623; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>CRM de Conteúdos</h1>
+  <div class="stats" id="stats"></div>
+  <div id="sessions-container"></div>
+
+  <script>
+    const KEY = 'crm_ai_sessions_v1';
+
+    function render() {
+      const raw = localStorage.getItem(KEY);
+      const container = document.getElementById('sessions-container');
+      const stats = document.getElementById('stats');
+
+      if (!raw) {
+        container.innerHTML = '<div class="empty">Nenhuma sessão encontrada.<br>Execute a skill de pesquisa diária para popular este CRM.</div>';
+        return;
+      }
+
+      let data;
+      try { data = JSON.parse(raw); } catch(e) {
+        container.innerHTML = '<div class="empty">Erro ao ler dados do localStorage.</div>';
+        return;
+      }
+
+      const sessions = Array.isArray(data) ? data : (data.sessions || [data]);
+      stats.innerHTML = `<div>Total de sessões: <span>${sessions.length}</span></div>`;
+
+      if (sessions.length === 0) {
+        container.innerHTML = '<div class="empty">Nenhuma sessão registrada ainda.</div>';
+        return;
+      }
+
+      container.innerHTML = sessions.slice().reverse().map(s => {
+        const tags = (s.tags || s.temas || []).map(t => `<span class="tag">${t}</span>`).join('');
+        return `
+          <div class="session">
+            <div class="session-date">${s.data || s.date || ''} ${s.hora || s.time || ''}</div>
+            <div class="session-title">${s.titulo || s.title || 'Sessão de Pesquisa'}</div>
+            <div class="session-body">${s.conteudo || s.content || s.resumo || ''}</div>
+            ${tags ? `<div style="margin-top:0.5rem">${tags}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    render();
+    window.addEventListener('storage', render);
+  </script>
+</body>
+</html>
